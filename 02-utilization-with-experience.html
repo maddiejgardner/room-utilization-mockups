@@ -105,7 +105,7 @@
       <div class="card"><div class="lab">Rooms in scope</div><div class="val">12</div><div class="sub">across 3 locations</div></div>
       <div class="card"><div class="lab">Avg. Utilization</div><div class="val">60%</div><div class="sub"><span class="delta up">▲ 0.2%</span> vs prior</div>
         <svg class="spark" width="84" height="30" viewBox="0 0 84 30"><polyline fill="none" stroke="#4d8ff0" stroke-width="2" points="0,20 12,19 24,21 36,15 48,16 60,11 72,13 84,9"/></svg></div>
-      <div class="card"><div class="lab">Avg. Quality (streams Good)</div><div class="val" style="color:var(--good)">91%</div><div class="sub">audio · video · screen-share combined</div></div>
+      <div class="card"><div class="lab">Avg. Quality (streams Good)</div><div class="val" style="color:var(--good)">91%</div><div class="sub">audio · video · VBSS combined</div></div>
       <div class="card" style="border-color:#3a2730"><div class="lab" style="color:var(--poor)">Rooms with quality issues</div><div class="val" style="color:var(--poor)">4</div><div class="sub">a stream type below 85% Good</div></div>
     </div>
 
@@ -160,7 +160,7 @@ function qcell(v){const low=v<60;return `<div class="qbar ${low?'lowtext':''}"><
 function ubcell(v){return `<div class="ubar"><div class="track"><div class="fill" style="width:${Math.min(v,100)}%"></div></div><span class="pct">${v}%</span></div>`}
 function minq(r){return Math.min(r.aud,r.vid,r.vbss)}
 function impact(r){return r.util*(100-minq(r))}
-function failChips(r){let c=[];if(r.aud<85)c.push(`<span class="failchip">Audio ${r.aud}%</span>`);if(r.vid<85)c.push(`<span class="failchip">Video ${r.vid}%</span>`);if(r.vbss<85)c.push(`<span class="failchip">Screen ${r.vbss}%</span>`);return c.join('')}
+function failChips(r){let c=[];if(r.aud<85)c.push(`<span class="failchip">Audio ${r.aud}%</span>`);if(r.vid<85)c.push(`<span class="failchip">Video ${r.vid}%</span>`);if(r.vbss<85)c.push(`<span class="failchip">VBSS ${r.vbss}%</span>`);return c.join('')}
 
 function render(){
   const loc=locSel.value,tag=tagSel.value;
