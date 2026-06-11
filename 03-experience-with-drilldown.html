@@ -31,7 +31,7 @@
   .btn{border:1px solid var(--line);background:var(--panel2);border-radius:7px;padding:7px 16px;font-size:12.5px;color:var(--muted);cursor:pointer;font-family:inherit}
   .btn.apply{color:#cfe0fb} .btn.ghost{border:0;background:none}
   .wrap{padding:18px 22px}
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:18px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden}
   .card .lab{font-size:12.5px;color:var(--muted);font-weight:500;margin-bottom:14px}
   .card .val{font-size:38px;font-weight:600;letter-spacing:-1px;line-height:1;color:var(--blue)}
@@ -141,6 +141,7 @@
       <div class="card"><div class="lab">Rooms in scope</div><div class="val">12</div><div class="sub">across 3 locations</div></div>
       <div class="card"><div class="lab">Avg. Utilization</div><div class="val">60%</div><div class="sub"><span class="delta up">▲ 0.2%</span> vs prior</div>
         <svg class="spark" width="84" height="30" viewBox="0 0 84 30"><polyline fill="none" stroke="#4d8ff0" stroke-width="2" points="0,20 12,19 24,21 36,15 48,16 60,11 72,13 84,9"/></svg></div>
+      <div class="card"><div class="lab">Underutilized rooms</div><div class="val" style="color:var(--poor)">2</div><div class="sub">below 30% utilization</div></div>
       <div class="card"><div class="lab">Avg. Quality (streams Good)</div><div class="val" style="color:var(--good)">91%</div><div class="sub">audio · video · VBSS combined</div></div>
       <div class="card" style="border-color:#3a2730"><div class="lab" style="color:var(--poor)">Rooms with quality issues</div><div class="val" style="color:var(--poor)">4</div><div class="sub">a stream type below 85% Good</div></div>
     </div>
