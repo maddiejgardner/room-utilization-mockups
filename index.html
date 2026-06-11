@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Room Utilization — Mockup Comparison</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#0f1419}
+  .topbar{display:flex;align-items:center;gap:18px;padding:0 20px;height:54px;background:#10151c;border-bottom:1px solid #222b36;position:sticky;top:0;z-index:10}
+  .brand{color:#fff;font-weight:700;font-size:14px;letter-spacing:-.2px;display:flex;align-items:center;gap:9px}
+  .brand .k{background:#2f6fed;color:#fff;width:24px;height:24px;border-radius:6px;display:grid;place-items:center;font-size:13px}
+  .tabs{display:flex;gap:6px;background:#1a212b;padding:4px;border-radius:10px}
+  .tab{border:0;background:transparent;color:#9aa6b4;padding:8px 16px;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s}
+  .tab:hover{color:#cdd6e0}
+  .tab.on{background:#fff;color:#10151c}
+  .tab .num{font-size:10px;width:17px;height:17px;border-radius:50%;display:grid;place-items:center;background:#2a3340;color:#cdd6e0}
+  .tab.on .num{background:#2f6fed;color:#fff}
+  .tab .chip{font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:.3px}
+  .chip.no{background:#2a3340;color:#9aa6b4}.tab.on .chip.no{background:#eef1f4;color:#6b7280}
+  .chip.q{background:#173a28;color:#5fd699}.tab.on .chip.q{background:#e6f4ec;color:#1f7a47}
+  .chip.d{background:#1c2e4a;color:#7fb0ff}.tab.on .chip.d{background:#eaf1fe;color:#2f6fed}
+  .sp{flex:1}
+  .meta{color:#6b7787;font-size:11.5px}
+  .kbd{background:#1a212b;border:1px solid #2a3340;border-radius:5px;padding:1px 7px;color:#9aa6b4;font-size:11px;margin:0 2px}
+  .stage{position:absolute;top:54px;left:0;right:0;bottom:0}
+  iframe{width:100%;height:100%;border:0;background:#f4f6f8;display:none}
+  iframe.on{display:block}
+  .caption{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#10151c;border:1px solid #2a3340;color:#cdd6e0;font-size:11.5px;padding:7px 15px;border-radius:20px;z-index:20;max-width:90vw;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+  .caption b{color:#fff}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><span class="k">K</span> Room Utilization — mockup comparison</div>
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-i="0"><span class="num">1</span> Utilization <span class="chip no">No quality</span></button>
+      <button class="tab" data-i="1"><span class="num">2</span> + Quality <span class="chip q">Quality</span></button>
+      <button class="tab" data-i="2"><span class="num">3</span> + Drill-down <span class="chip d">Quality · Drill</span></button>
+    </div>
+    <div class="sp"></div>
+    <div class="meta">Switch with the tabs or press <span class="kbd">1</span><span class="kbd">2</span><span class="kbd">3</span></div>
+  </div>
+  <div class="stage">
+    <iframe class="on" src="01-utilization-only.html" id="f0"></iframe>
+    <iframe src="02-utilization-with-experience.html" id="f1"></iframe>
+    <iframe src="03-experience-with-drilldown.html" id="f2"></iframe>
+  </div>
+  <div class="caption" id="cap"></div>
+<script>
+  const caps=[
+    'Phase 1 — <b>utilization only</b>. KPI cards + one utilization-over-time chart + rooms ranking. Utilization % &amp; meeting hours are the one new V1 build (duration input on the existing pipeline).',
+    'Phase 1 + <b>Quality</b>. Adds Audio / Video / VBSS % Good (already live in COM today) and a <b>Rooms with Quality Issues</b> panel. No scatter, no hardware-aging — only what we can do today.',
+    'Phase 1 + Quality + <b>drill-down</b>. <b>Click any room row</b> for per-room utilization, quality by stream type, quality-over-time, and call mix — all from fields available today.'
+  ];
+  const tabs=[...document.querySelectorAll('.tab')];
+  const frames=[f0,f1,f2];
+  function show(i){
+    tabs.forEach((t,n)=>t.classList.toggle('on',n===i));
+    frames.forEach((f,n)=>f.classList.toggle('on',n===i));
+    cap.innerHTML=caps[i];
+  }
+  tabs.forEach(t=>t.addEventListener('click',()=>show(+t.dataset.i)));
+  document.addEventListener('keydown',e=>{if(['1','2','3'].includes(e.key))show(+e.key-1)});
+  show(0);
+</script>
+</body>
+</html>

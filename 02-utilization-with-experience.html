@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Room Utilization + Quality — Report</title>
+<style>
+  :root{
+    --bg:#0a0f18; --panel:#0e1626; --panel2:#101a2e; --line:#1c2840; --line2:#172033;
+    --ink:#e6ebf2; --muted:#8693a6; --muted2:#5e6b7e;
+    --blue:#4d8ff0; --blue-bar:#3b7fe0; --blue-soft:#16233f;
+    --good:#79c6a1; --good-bg:#143026; --amber:#d8b06a; --poor:#e0876f; --poor-bg:#3a2027;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:13px;-webkit-font-smoothing:antialiased}
+  .topbar{display:flex;align-items:center;gap:12px;padding:14px 22px 8px}
+  .topbar h1{font-size:18px;font-weight:600;margin:0;letter-spacing:-.2px}
+  .topbar .ref{color:var(--muted2);font-size:15px}
+  .topbar .phase{font-size:10.5px;font-weight:600;color:#8ad6a6;background:#143026;border:1px solid #245e3a;padding:3px 9px;border-radius:20px}
+  .topbar .sp{flex:1}
+  .topbar .kebab{color:var(--muted2);border:1px solid var(--line);border-radius:6px;padding:3px 8px;cursor:pointer}
+  .scope{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px;padding:8px 22px 16px;border-bottom:1px solid var(--line)}
+  .fld{display:flex;flex-direction:column;gap:5px}
+  .fld label{font-size:11px;color:var(--muted)} .fld label .req{color:var(--poor)}
+  .fld .ctrl{display:flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:12.5px;color:var(--ink);min-width:120px}
+  .fld select{background:transparent;border:0;color:var(--ink);font-size:12.5px;font-family:inherit;outline:none;width:100%}
+  .fld .ctrl.date{gap:9px;color:var(--muted)}
+  .pillx{background:#16233f;border:1px solid #243a5e;border-radius:5px;padding:1px 7px;font-size:11.5px;color:#cfe0fb;display:inline-flex;align-items:center;gap:5px}
+  .pillx .x{color:var(--muted2);cursor:pointer}
+  .scope .sp{flex:1}
+  .btn{border:1px solid var(--line);background:var(--panel2);border-radius:7px;padding:7px 16px;font-size:12.5px;color:var(--muted);cursor:pointer;font-family:inherit}
+  .btn.apply{color:#cfe0fb} .btn.ghost{border:0;background:none}
+  .wrap{padding:18px 22px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden}
+  .card .lab{font-size:12.5px;color:var(--muted);font-weight:500;margin-bottom:14px}
+  .card .val{font-size:38px;font-weight:600;letter-spacing:-1px;line-height:1;color:var(--blue)}
+  .card .sub{font-size:11.5px;color:var(--muted2);margin-top:8px}
+  .card .delta.up{color:var(--good)}.card .delta.down{color:var(--poor)}
+  .spark{position:absolute;right:14px;bottom:12px;opacity:.9}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:18px}
+  .panel.alert{border-color:#3a2730}
+  .ph{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line2)}
+  .ph .t{font-size:13.5px;font-weight:600} .ph .hint{color:var(--muted2);font-size:11px;font-weight:400} .ph .sp{flex:1}
+  .ph .ic{color:var(--muted2);font-size:13px}
+  .ph .cnt{background:var(--blue);color:#fff;font-size:10px;font-weight:700;width:17px;height:17px;border-radius:50%;display:grid;place-items:center}
+  .ph .warn{color:var(--poor)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  thead th{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);color:var(--muted);font-weight:500;font-size:12px;cursor:pointer;user-select:none;white-space:nowrap}
+  thead th.num{text-align:right}
+  thead th .ar{opacity:.4;font-size:9px;margin-left:3px}
+  tbody td{padding:10px 14px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  tbody td.num{text-align:right;font-variant-numeric:tabular-nums}
+  tbody tr:hover{background:#0f1a2e}
+  .rname{font-weight:600}
+  .tags{color:var(--muted);font-size:11.5px}
+  .loc{color:var(--muted)}
+  .ubar{position:relative;min-width:120px}
+  .ubar .track{background:var(--blue-soft);height:20px;border-radius:4px;overflow:hidden}
+  .ubar .fill{height:100%;background:var(--blue-bar);border-radius:4px}
+  .ubar .pct{position:absolute;right:8px;top:0;line-height:20px;font-size:11.5px;font-weight:600;color:#dce8fb}
+  /* quality bar cell like the live product */
+  .qbar{position:relative;min-width:110px}
+  .qbar .track{background:#16203a;height:20px;border-radius:4px;overflow:hidden}
+  .qbar .fill{height:100%;border-radius:4px}
+  .qbar .pct{position:absolute;right:8px;top:0;line-height:20px;font-size:11.5px;font-weight:600;color:#0c1320}
+  .qbar.lowtext .pct{color:#e8eef7}
+  .foot{color:var(--muted2);font-size:11px;padding:12px 16px;display:flex;justify-content:space-between;border-top:1px solid var(--line2)}
+  .colq{border-left:1px solid var(--line2)}
+  /* fix-first compact callout */
+  .fixlist{padding:4px 0}
+  .fixrow{display:flex;align-items:center;gap:14px;padding:11px 16px;border-bottom:1px solid var(--line2)}
+  .fixrow:last-child{border-bottom:0}
+  .fixrow .rk{color:var(--muted2);font-weight:700;width:14px;text-align:center}
+  .fixrow .rm{font-weight:600;min-width:190px}
+  .fixrow .ut{color:var(--muted);font-size:11.5px;flex:1}
+  .fixrow .fails{display:flex;gap:7px;flex-wrap:wrap}
+  .failchip{font-size:11px;font-weight:600;color:var(--poor);background:var(--poor-bg);border:1px solid #4a2730;border-radius:5px;padding:1px 8px}
+  tbody tr.issue td:first-child{box-shadow:inset 3px 0 0 var(--poor)}
+  tbody tr.issue{background:rgba(224,135,111,.05)}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>Room Utilization &amp; Quality</h1>
+    <span class="ref">⟳</span>
+    <span class="phase">PHASE 1 + QUALITY</span>
+    <span class="sp"></span>
+    <span class="kebab">⋯</span>
+  </div>
+
+  <div class="scope">
+    <div class="fld"><label>Time Zone <span class="req">*</span></label><div class="ctrl"><select><option>America/Los_Angeles</option><option>America/New_York</option><option>Europe/London</option></select></div></div>
+    <div class="fld"><label>Time</label><div class="ctrl date">2026-05-11 &nbsp;→&nbsp; 2026-06-11 📅</div></div>
+    <div class="fld"><label>Type <span class="req">*</span></label><div class="ctrl"><span class="pillx">Rooms <span class="x">×</span></span></div></div>
+    <div class="fld"><label>Location</label><div class="ctrl"><select id="locSel"><option>All</option></select></div></div>
+    <div class="fld"><label>Tags</label><div class="ctrl"><select id="tagSel"><option>All tags</option><option>VIP</option><option>Conference Rooms</option><option>Bend</option><option>Portland</option></select></div></div>
+    <span class="sp"></span>
+    <button class="btn apply" onclick="render()">Apply</button>
+    <button class="btn ghost">Clear All</button>
+  </div>
+
+  <div class="wrap">
+    <div class="kpis">
+      <div class="card"><div class="lab">Rooms in scope</div><div class="val">12</div><div class="sub">across 3 locations</div></div>
+      <div class="card"><div class="lab">Avg. Utilization</div><div class="val">60%</div><div class="sub"><span class="delta up">▲ 0.2%</span> vs prior</div>
+        <svg class="spark" width="84" height="30" viewBox="0 0 84 30"><polyline fill="none" stroke="#4d8ff0" stroke-width="2" points="0,20 12,19 24,21 36,15 48,16 60,11 72,13 84,9"/></svg></div>
+      <div class="card"><div class="lab">Avg. Quality (streams Good)</div><div class="val" style="color:var(--good)">91%</div><div class="sub">audio · video · screen-share combined</div></div>
+      <div class="card" style="border-color:#3a2730"><div class="lab" style="color:var(--poor)">Rooms with quality issues</div><div class="val" style="color:var(--poor)">4</div><div class="sub">a stream type below 85% Good</div></div>
+    </div>
+
+    <!-- FIX-FIRST CALLOUT (compact, different columns than the table below — no duplication) -->
+    <div class="panel alert">
+      <div class="ph"><span class="t warn">⚠ Fix First</span> <span class="hint">— heavily-used rooms with poor quality, ranked by impact (use × quality gap)</span><span class="sp"></span><span class="cnt">4</span><span class="ic">⋮</span></div>
+      <div class="fixlist" id="fixlist"></div>
+    </div>
+
+    <!-- MAIN TABLE -->
+    <div class="panel">
+      <div class="ph"><span class="t">Rooms — Utilization &amp; Quality</span><span class="hint" id="cnt"></span><span class="sp"></span><span class="ic">▽</span><span class="cnt">4</span><span class="ic">⋮</span></div>
+      <div style="overflow-x:auto">
+        <table id="tbl">
+          <thead><tr>
+            <th data-k="room">Room <span class="ar">↕</span></th>
+            <th data-k="tags">Tags</th>
+            <th data-k="loc">Location</th>
+            <th class="num" data-k="util">Utilization % <span class="ar">↓</span></th>
+            <th class="num" data-k="mtgs"># Meetings</th>
+            <th class="num colq" data-k="aud">Audio Quality</th>
+            <th class="num" data-k="vid">Video Quality</th>
+            <th class="num" data-k="vbss">VBSS Quality</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="foot"><span>Showing <span id="shown"></span> of 12 rooms</span><span>Source: COM · Utilization = new duration input · Audio/Video/VBSS Quality = existing recv_* ratings (already live)</span></div>
+    </div>
+  </div>
+
+<script>
+const ROOMS=[
+ {room:"Crux Meeting Room",tags:"Bend | Conference Rooms",loc:"Bend",util:84,mtgs:45,aud:100,vid:98,vbss:96},
+ {room:"Cascade Lakes Meeting Room",tags:"Bend | Conference Rooms",loc:"Bend",util:81,mtgs:110,aud:100,vid:96,vbss:97},
+ {room:"Boardroom",tags:"Bend | Conference Rooms | VIP",loc:"Bend",util:92,mtgs:98,aud:88,vid:64,vbss:72},
+ {room:"Boneyard Meeting Room",tags:"Bend | Conference Rooms",loc:"Bend",util:74,mtgs:84,aud:95,vid:82,vbss:85},
+ {room:"GoodLife Meeting Room",tags:"Bend | Conference Rooms",loc:"Bend",util:71,mtgs:73,aud:99,vid:94,vbss:95},
+ {room:"Deschutes Meeting Room",tags:"Bend | Conference Rooms | VIP",loc:"Bend",util:66,mtgs:55,aud:100,vid:98,vbss:100},
+ {room:"Summit Meeting Room",tags:"Portland | Conference Rooms | VIP",loc:"Portland",util:63,mtgs:58,aud:90,vid:70,vbss:78},
+ {room:"Cinder Meeting Room",tags:"Portland | Conference Rooms",loc:"Portland",util:54,mtgs:50,aud:96,vid:88,vbss:90},
+ {room:"Sat. Room 1",tags:"Remote | Conference Rooms",loc:"Remote",util:46,mtgs:54,aud:97,vid:90,vbss:92},
+ {room:"Sat. Room 2",tags:"Remote | Conference Rooms",loc:"Remote",util:41,mtgs:42,aud:82,vid:64,vbss:70},
+ {room:"Overflow 1",tags:"Bend | Conference Rooms",loc:"Bend",util:26,mtgs:31,aud:94,vid:86,vbss:88},
+ {room:"Overflow 2",tags:"Bend | Conference Rooms",loc:"Bend",util:18,mtgs:28,aud:96,vid:90,vbss:91},
+];
+let sortK="util",sortDir=-1;
+const locs=[...new Set(ROOMS.map(r=>r.loc))];
+locSel.innerHTML='<option>All</option>'+locs.map(l=>`<option>${l}</option>`).join('');
+function qcolor(v){return v>=95?'var(--good)':v>=85?'var(--amber)':'var(--poor)'}
+function qcell(v){const low=v<60;return `<div class="qbar ${low?'lowtext':''}"><div class="track"><div class="fill" style="width:${v}%;background:${qcolor(v)}"></div></div><span class="pct">${v}%</span></div>`}
+function ubcell(v){return `<div class="ubar"><div class="track"><div class="fill" style="width:${Math.min(v,100)}%"></div></div><span class="pct">${v}%</span></div>`}
+function minq(r){return Math.min(r.aud,r.vid,r.vbss)}
+function impact(r){return r.util*(100-minq(r))}
+function failChips(r){let c=[];if(r.aud<85)c.push(`<span class="failchip">Audio ${r.aud}%</span>`);if(r.vid<85)c.push(`<span class="failchip">Video ${r.vid}%</span>`);if(r.vbss<85)c.push(`<span class="failchip">Screen ${r.vbss}%</span>`);return c.join('')}
+
+function render(){
+  const loc=locSel.value,tag=tagSel.value;
+  let rows=ROOMS.filter(r=>(loc==='All'||r.loc===loc)&&(tag==='All tags'||r.tags.includes(tag)));
+  // fix-first callout (compact, impact-ranked, only the failing metrics)
+  let fix=rows.filter(r=>minq(r)<85).sort((a,b)=>impact(b)-impact(a));
+  fixlist.innerHTML=fix.map((r,i)=>`<div class="fixrow">
+    <span class="rk">${i+1}</span><span class="rm">${r.room}</span>
+    <span class="ut">${r.util}% util · ${r.mtgs} mtgs</span>
+    <span class="fails">${failChips(r)}</span>
+  </div>`).join('') || `<div class="fixrow" style="color:var(--muted)">No rooms below the 85% quality threshold in scope. ✓</div>`;
+  // main table — all rooms, problem rows highlighted (conditional formatting)
+  rows.sort((a,b)=>{let x=a[sortK],y=b[sortK];if(typeof x==='string')return sortDir*x.localeCompare(y);return sortDir*(x-y)});
+  tbody.innerHTML=rows.map(r=>`<tr class="${minq(r)<85?'issue':''}">
+    <td class="rname">${r.room}</td><td class="tags">${r.tags}</td><td class="loc">${r.loc}</td>
+    <td class="num">${ubcell(r.util)}</td><td class="num">${r.mtgs}</td>
+    <td class="num colq">${qcell(r.aud)}</td><td class="num">${qcell(r.vid)}</td><td class="num">${qcell(r.vbss)}</td>
+  </tr>`).join('');
+  shown.textContent=rows.length; cnt.textContent='— '+rows.length+' rooms';
+}
+document.querySelectorAll('#tbl thead th[data-k]').forEach(th=>th.addEventListener('click',()=>{
+  const k=th.dataset.k;if(sortK===k)sortDir*=-1;else{sortK=k;sortDir=(k==='room'||k==='loc'||k==='tags')?1:-1;}
+  document.querySelectorAll('#tbl thead .ar').forEach(a=>a.textContent='↕');const ar=th.querySelector('.ar');if(ar)ar.textContent=sortDir<0?'↓':'↑';render();
+}));
+render();
+</script>
+</body>
+</html>
